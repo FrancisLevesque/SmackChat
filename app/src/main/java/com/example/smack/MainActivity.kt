@@ -1,6 +1,7 @@
 package com.example.smack
 
 import android.os.Bundle
+import android.view.View
 import androidx.appcompat.app.ActionBarDrawerToggle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
@@ -29,5 +30,17 @@ class MainActivity : AppCompatActivity() {
         } else {
             super.onBackPressed()
         }
+    }
+
+    fun loginButtonNavClicked(view: View) {
+
+    }
+
+    fun addChannelClicked(view: View) {
+
+    }
+
+    fun sendMessageButtonClicked(view: View) {
+        
     }
 }
