@@ -1,13 +1,14 @@
 package com.example.smack.Services
 
 import android.content.Context
+import android.content.Intent
 import android.util.Log
+import androidx.lifecycle.ReportFragment
+import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import com.android.volley.Request
 import com.android.volley.Response
 import com.android.volley.toolbox.*
-import com.example.smack.Utilities.URL_CREATE_USER
-import com.example.smack.Utilities.URL_LOGIN
-import com.example.smack.Utilities.URL_REGISTER
+import com.example.smack.Utilities.*
 import org.json.JSONException
 import org.json.JSONObject
 
@@ -116,5 +117,38 @@ object AuthService {
         }
 
         Volley.newRequestQueue(context).add(createRequest)
+    }
+
+    fun findUserByEmail(context: Context, complete: (Boolean) -> Unit) {
+        val findUserRequest = object: JsonObjectRequest(Method.GET, "$URL_GET_USER$userEmail", null, Response.Listener { response ->
+            try {
+                UserDataService.name = response.getString("name")
+                UserDataService.email = response.getString("email")
+                UserDataService.avatarName = response.getString("avatarName")
+                UserDataService.avatarColor = response.getString("avatarColor")
+                UserDataService.id = response.getString("_id")
+
+                val userDataChange = Intent(BROADCAST_USER_DATA_CHANGE)
+                LocalBroadcastManager.getInstance(context).sendBroadcast(userDataChange)
+                complete(true)
+            } catch (e: JSONException) {
+                Log.d("JSON ERROR", e.localizedMessage)
+            }
+        }, Response.ErrorListener { error ->
+            Log.d("ERROR", "Could not find user.")
+            complete(false)
+        }) {
+            override fun getBodyContentType(): String {
+                return "application/json; charset=utf-8"
+            }
+
+            override fun getHeaders(): MutableMap<String, String> {
+                val headers = HashMap<String, String>()
+                headers["Authorization"] = "Bearer $authToken"
+                return headers
+            }
+        }
+
+        Volley.newRequestQueue(context).add(findUserRequest)
     }
 }
