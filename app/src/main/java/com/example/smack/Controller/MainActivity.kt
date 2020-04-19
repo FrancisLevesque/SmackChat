@@ -14,6 +14,8 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
 import androidx.core.view.GravityCompat
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
+import androidx.recyclerview.widget.LinearLayoutManager
+import com.example.smack.Adapters.MessageAdapter
 import com.example.smack.Model.Channel
 import com.example.smack.R
 import com.example.smack.Services.AuthService
@@ -31,11 +33,17 @@ class MainActivity : AppCompatActivity() {
 
     val socket = IO.socket(SOCKET_URL)
     lateinit var channelAdapter: ArrayAdapter<Channel>
+    lateinit var messagesAdapter: MessageAdapter
     var selectedChannel : Channel? = null
 
     private fun setupAdapters() {
         channelAdapter = ArrayAdapter(this, android.R.layout.simple_list_item_1, MessageService.channels)
         channel_list.adapter = channelAdapter
+
+        messagesAdapter = MessageAdapter(this, MessageService.messages)
+        messageListView.adapter = messagesAdapter
+        val layoutManager = LinearLayoutManager(this)
+        messageListView.layoutManager = layoutManager
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -109,8 +117,9 @@ class MainActivity : AppCompatActivity() {
         if (selectedChannel != null) {
             MessageService.getMessages(selectedChannel!!.id) { complete ->
                 if (complete) {
-                    for (message in MessageService.messages) {
-                        println(message.message)
+                    messagesAdapter.notifyDataSetChanged()
+                    if (messagesAdapter.itemCount > 0) {
+                        messageListView.smoothScrollToPosition(messagesAdapter.itemCount - 1)
                     }
                 }
             }
@@ -128,6 +137,8 @@ class MainActivity : AppCompatActivity() {
     fun loginButtonNavClicked(view: View) {
         if (App.prefs.isLoggedIn) {
             UserDataService.logout()
+            channelAdapter.notifyDataSetChanged()
+            messagesAdapter.notifyDataSetChanged()
             userNameNavHeader.text = ""
             userEmailNavHeader.text = ""
             userImageNavHeader.setImageResource(R.drawable.profiledefault)
@@ -187,6 +198,8 @@ class MainActivity : AppCompatActivity() {
                     val newMessage = com.example.smack.Model.Message(messageBody, userName, channelId, userAvatar, userAvatarColor, id, timeStamp)
 
                     MessageService.messages.add(newMessage)
+                    messagesAdapter.notifyDataSetChanged()
+                    messageListView.smoothScrollToPosition(messagesAdapter.itemCount - 1)
                 }
             }
         }
